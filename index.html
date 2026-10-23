@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicFix AI — Smart Civic Issue Reporting & Triage Hub</title>
+  <meta name="description" content="A lightweight, responsive civic problem reporting portal with transparent local rule-based categorization, priority scoring, and duplicate detection.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Announcement / Disclaimer Banner -->
+  <aside class="demo-banner" role="complementary" aria-label="Demo Disclaimer">
+    <div class="banner-content">
+      <span class="banner-badge" aria-hidden="true">DEMO PROTOTYPE</span>
+      <p class="banner-text">
+        <strong>CivicFix AI Hackathon Preview:</strong> All complaints are stored locally in your browser (LocalStorage). Reports are <em>not</em> transmitted to actual emergency or municipal authorities.
+      </p>
+      <button type="button" id="dismissBannerBtn" class="banner-dismiss" aria-label="Dismiss demo disclaimer">✕</button>
+    </div>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#dashboard" class="brand" id="brandLogoLink" aria-label="CivicFix AI Homepage">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">CivicFix <span class="brand-accent">AI</span></span>
+          <span class="brand-tagline">Local Rules Intelligence</span>
+        </div>
+      </a>
+
+      <!-- Mobile Hamburger Toggle -->
+      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Toggle navigation menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <!-- Navigation Tabs -->
+      <nav class="primary-nav" id="primaryNav" aria-label="Main Navigation">
+        <ul class="nav-list" role="tablist">
+          <li role="presentation">
+            <button type="button" role="tab" class="nav-link active" id="tab-dashboard" data-target="dashboard-view" aria-selected="true" aria-controls="dashboard-view">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              <span>Dashboard</span>
+            </button>
+          </li>
+          <li role="presentation">
+            <button type="button" role="tab" class="nav-link" id="tab-report" data-target="report-view" aria-selected="false" aria-controls="report-view">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <span>Report Issue</span>
+            </button>
+          </li>
+          <li role="presentation">
+            <button type="button" role="tab" class="nav-link" id="tab-tracker" data-target="tracker-view" aria-selected="false" aria-controls="tracker-view">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>Issue Tracker</span>
+              <span class="nav-badge" id="navIssueCountBadge" aria-label="Issue count">0</span>
+            </button>
+          </li>
+          <li role="presentation">
+            <button type="button" role="tab" class="nav-link" id="tab-transparency" data-target="transparency-view" aria-selected="false" aria-controls="transparency-view">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>How Rules Work</span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="nav-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="quickReportBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span>+ Report Problem</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Application Content Area -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ========================================================
+         VIEW 1: DASHBOARD
+         ======================================================== -->
+    <section id="dashboard-view" class="view-panel active" role="tabpanel" aria-labelledby="tab-dashboard">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">Civic Health Dashboard</h1>
+          <p class="view-subtitle">Real-time overview of community reported infrastructure issues, automated priority scoring, and resolution progress.</p>
+        </div>
+        <div class="header-action-group">
+          <button type="button" class="btn btn-secondary btn-sm" id="resetDemoDataBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+            Reset Demo Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards Grid -->
+      <div class="stats-grid" aria-label="Key civic statistics">
+        <div class="stat-card stat-total">
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Reports</span>
+            <strong class="stat-value" id="statTotalCount">0</strong>
+            <span class="stat-detail">Local civic database</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-pending">
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending Review</span>
+            <strong class="stat-value" id="statPendingCount">0</strong>
+            <span class="stat-detail">Awaiting assessment</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-inprogress">
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">In Progress</span>
+            <strong class="stat-value" id="statInProgressCount">0</strong>
+            <span class="stat-detail">Action dispatched</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-resolved">
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Resolved</span>
+            <strong class="stat-value" id="statResolvedCount">0</strong>
+            <span class="stat-detail" id="statResolutionRate">0% resolution rate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Detailed Breakdown Grid -->
+      <div class="dashboard-secondary-grid">
+        <!-- Category Distribution Card -->
+        <div class="card category-breakdown-card">
+          <div class="card-header">
+            <h2 class="card-title">Reports by Category</h2>
+            <span class="card-tag">Distribution</span>
+          </div>
+          <div class="card-body">
+            <div id="categoryBarsContainer" class="category-bars-list" aria-label="Category Distribution Breakdown">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Priority & Urgency Severity Matrix -->
+        <div class="card priority-matrix-card">
+          <div class="card-header">
+            <h2 class="card-title">Priority Triage Breakdown</h2>
+            <span class="card-tag">Scored by Rules Engine</span>
+          </div>
+          <div class="card-body">
+            <div class="priority-pills-row" id="priorityPillsContainer">
+              <div class="priority-pill pill-critical">
+                <span class="pill-title">Critical</span>
+                <span class="pill-count" id="countCritical">0</span>
+                <span class="pill-desc">Immediate safety risk</span>
+              </div>
+              <div class="priority-pill pill-high">
+                <span class="pill-title">High</span>
+                <span class="pill-count" id="countHigh">0</span>
+                <span class="pill-desc">Disruptive hazard</span>
+              </div>
+              <div class="priority-pill pill-medium">
+                <span class="pill-title">Medium</span>
+                <span class="pill-count" id="countMedium">0</span>
+                <span class="pill-desc">Standard maintenance</span>
+              </div>
+              <div class="priority-pill pill-low">
+                <span class="pill-title">Low</span>
+                <span class="pill-count" id="countLow">0</span>
+                <span class="pill-desc">Minor cosmetic / wear</span>
+              </div>
+            </div>
+
+            <div class="engine-explanation-box">
+              <div class="engine-badge-row">
+                <span class="smart-tag">⚙️ Rule-Based Engine Active</span>
+                <span class="text-muted-xs">Deterministic scoring (0–100)</span>
+              </div>
+              <p class="engine-description">
+                Priority is computed using transparent local rules: keywords indicating acute hazard, proximity to sensitive zones (schools/hospitals), citizen urgency ratings, and community endorsements.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Urgent Issues Showcase -->
+      <div class="card recent-reports-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Recent Urgent Complaints</h2>
+            <p class="card-subtitle">Latest problems requiring municipal triage or community endorsements</p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="viewAllComplaintsLink">View All Complaints →</button>
+        </div>
+        <div class="card-body">
+          <div class="recent-list" id="dashboardRecentList" role="list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================
+         VIEW 2: REPORT COMPLAINT (SMART FORM)
+         ======================================================== -->
+    <section id="report-view" class="view-panel" role="tabpanel" aria-labelledby="tab-report" hidden>
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">Report a Civic Problem</h1>
+          <p class="view-subtitle">Submit details of infrastructure failures, potholes, waste issues, or hazards. Our local engine analyzes priority and checks for existing duplicates in real time.</p>
+        </div>
+      </div>
+
+      <div class="report-layout-grid">
+        <!-- Main Form Column -->
+        <div class="report-form-column">
+          <div class="card form-card">
+            <div class="card-header">
+              <h2 class="card-title">Complaint Submission Form</h2>
+              <span class="form-required-notice"><span class="req-star">*</span> Required fields</span>
+            </div>
+
+            <form id="complaintForm" class="complaint-form" novalidate>
+
+              <!-- Title Field -->
+              <div class="form-group">
+                <label for="complaintTitle" class="form-label">
+                  Issue Title <span class="req-star">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="complaintTitle" 
+                  name="title" 
+                  class="form-control" 
+                  placeholder="e.g., Deep dangerous pothole near Oak St Elementary school"
+                  maxlength="120"
+                  required
+                  aria-describedby="titleHelp titleError"
+                >
+                <div class="field-feedback">
+                  <small id="titleHelp" class="form-hint">Be specific about the problem and prominent landmarks.</small>
+                  <small id="titleError" class="form-error" role="alert" hidden></small>
+                </div>
+              </div>
+
+              <!-- Location Field & Quick Chips -->
+              <div class="form-group">
+                <label for="complaintLocation" class="form-label">
+                  Location / Address <span class="req-star">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <span class="input-icon" aria-hidden="true">📍</span>
+                  <input 
+                    type="text" 
+                    id="complaintLocation" 
+                    name="location" 
+                    class="form-control has-icon" 
+                    placeholder="e.g., 450 Elm Street, corner of 4th Ave"
+                    maxlength="150"
+                    required
+                    aria-describedby="locationHelp locationError"
+                  >
+                </div>
+                <!-- Quick Location Sensitivity Tags -->
+                <div class="location-chips" aria-label="Quick landmark modifiers">
+                  <span class="chips-label">Quick Landmark Tag:</span>
+                  <button type="button" class="chip-btn" data-append="near Elementary School">🏫 School Zone</button>
+                  <button type="button" class="chip-btn" data-append="near General Hospital">🏥 Hospital Area</button>
+                  <button type="button" class="chip-btn" data-append="on Main Highway">🛣️ Main Arterial</button>
+                  <button type="button" class="chip-btn" data-append="near Subway Transit Station">🚇 Transit Hub</button>
+                </div>
+                <div class="field-feedback">
+                  <small id="locationHelp" class="form-hint">Accurate locations help verify if this is in a high-priority public safety zone.</small>
+                  <small id="locationError" class="form-error" role="alert" hidden></small>
+                </div>
+              </div>
+
+              <!-- Two Column Row: Category & Citizen Urgency -->
+              <div class="form-row-2col">
+                <!-- Category Select with Smart Auto-Suggest Badge -->
+                <div class="form-group">
+                  <div class="label-with-addon">
+                    <label for="complaintCategory" class="form-label">
+                      Category <span class="req-star">*</span>
+                    </label>
+                    <span id="suggestedCategoryBadge" class="suggestion-badge" hidden>
+                      Suggested: <strong id="suggestedCategoryName">-</strong>
+                      <button type="button" id="applySuggestionBtn" class="suggestion-apply-btn" title="Click to apply auto-detected category">Apply</button>
+                    </span>
+                  </div>
+                  <select id="complaintCategory" name="category" class="form-select" required aria-describedby="categoryHelp categoryError">
+                    <option value="" disabled selected>Select an issue category...</option>
+                    <option value="Roads & Potholes">🛣️ Roads, Potholes & Pavement</option>
+                    <option value="Street Lighting">💡 Streetlights & Electrical</option>
+                    <option value="Waste & Sanitation">🗑️ Waste, Trash & Sanitation</option>
+                    <option value="Water & Sewage">🚰 Water Leakage & Sewage</option>
+                    <option value="Public Safety">⚠️ Public Safety & Physical Hazards</option>
+                    <option value="Parks & Greenery">🌳 Parks & Public Spaces</option>
+                    <option value="Other">📌 Other Civic Infrastructure</option>
+                  </select>
+                  <small id="categoryError" class="form-error" role="alert" hidden></small>
+                </div>
+
+                <!-- Citizen Urgency -->
+                <div class="form-group">
+                  <label for="complaintUrgency" class="form-label">
+                    Citizen Urgency Assessment <span class="req-star">*</span>
+                  </label>
+                  <select id="complaintUrgency" name="urgency" class="form-select" required aria-describedby="urgencyHelp">
+                    <option value="Low">Low — Minor inconvenience / cosmetic</option>
+                    <option value="Medium" selected>Medium — Noticeable problem, needs routine fix</option>
+                    <option value="High">High — Disruption to traffic, health, or visibility</option>
+                    <option value="Critical">Critical — Immediate safety threat or hazard</option>
+                  </select>
+                  <small id="urgencyHelp" class="form-hint">Factor in pedestrian and vehicle danger.</small>
+                </div>
+              </div>
+
+              <!-- Detailed Description -->
+              <div class="form-group">
+                <label for="complaintDescription" class="form-label">
+                  Detailed Description <span class="req-star">*</span>
+                </label>
+                <textarea 
+                  id="complaintDescription" 
+                  name="description" 
+                  class="form-control" 
+                  rows="4" 
+                  placeholder="Describe the severity, duration, and any hazards (e.g., 'The pothole is roughly 2 feet wide and 6 inches deep. Bicycles swerve into oncoming traffic to avoid it at night.')."
+                  required
+                  minlength="15"
+                  maxlength="800"
+                  aria-describedby="descHelp descCharCount descError"
+                ></textarea>
+                <div class="field-feedback-row">
+                  <small id="descHelp" class="form-hint">Use descriptive words like "hazard", "dark", or "flooding" for proper rule scoring.</small>
+                  <span id="descCharCount" class="char-count">0 / 800</span>
+                </div>
+                <small id="descError" class="form-error" role="alert" hidden></small>
+              </div>
+
+              <!-- Media Attachment (Optional Demo Photo) -->
+              <div class="form-group">
+                <label for="complaintPhoto" class="form-label">
+                  Photo Evidence <span class="optional-tag">(Optional)</span>
+                </label>
+                <div class="photo-upload-container">
+                  <input type="file" id="complaintPhoto" accept="image/*" class="file-input" aria-describedby="photoHelp">
+                  <div class="upload-dropzone" id="uploadDropzone">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Click or drag image file here (PNG, JPG)</span>
+                    <small>Stored locally in browser memory</small>
+                  </div>
+                  <!-- Preview Box -->
+                  <div class="photo-preview-wrap" id="photoPreviewWrap" hidden>
+                    <img id="photoPreviewImg" alt="Complaint photo preview" class="photo-preview-thumbnail">
+                    <button type="button" id="removePhotoBtn" class="btn-remove-photo" aria-label="Remove attached photo">✕ Remove</button>
+                  </div>
+                </div>
+                <small id="photoHelp" class="form-hint">Photos help crews assess equipment needed.</small>
+              </div>
+
+              <!-- Form Action Buttons -->
+              <div class="form-actions-bar">
+                <button type="submit" class="btn btn-primary btn-lg" id="submitComplaintBtn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Submit Complaint</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="clearFormBtn">Clear Form</button>
+                <button type="button" class="btn btn-ghost" id="fillSampleFormBtn" title="Fill form with sample critical pothole data">⚡ Fill Sample Data</button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Real-Time Rule Assistant & Duplicate Inspector Column -->
+        <div class="report-assistant-column">
+          <!-- Real-Time Local Rule Engine Assessment Box -->
+          <div class="card assistant-card">
+            <div class="card-header">
+              <div class="assistant-header-title">
+                <span class="assistant-pulse" aria-hidden="true"></span>
+                <h3 class="card-title">Live Priority &amp; Category Engine</h3>
+              </div>
+              <span class="badge badge-light">Local Rules</span>
+            </div>
+            <div class="card-body">
+              <p class="assistant-intro">
+                As you type, our modular rule-based heuristics score priority and detect relevant categories.
+              </p>
+
+              <!-- Dynamic Priority Gauge -->
+              <div class="priority-meter-box">
+                <div class="priority-meter-header">
+                  <span class="meter-label">Calculated Priority:</span>
+                  <span class="meter-badge badge-neutral" id="livePriorityBadge">Pending Input</span>
+                </div>
+                <div class="meter-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="liveScoreTrack">
+                  <div class="meter-fill" id="liveScoreFill" style="width: 0%;"></div>
+                </div>
+                <div class="meter-values">
+                  <span>Score: <strong id="liveScoreValue">0</strong>/100</span>
+                  <span id="liveScoreTier" class="text-muted-xs">Low (0-24)</span>
+                </div>
+              </div>
+
+              <!-- Transparent Scoring Rules Breakdown -->
+              <div class="scoring-breakdown-box">
+                <h4 class="breakdown-title">Transparent Factor Breakdown:</h4>
+                <ul class="breakdown-list" id="liveBreakdownList">
+                  <li class="breakdown-empty">Begin typing title and description to see live rule evaluations.</li>
+                </ul>
+              </div>
+
+              <!-- Rule Engine Disclaimer -->
+              <div class="transparency-note">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span><strong>No fake AI claim:</strong> This calculation uses explicit deterministic keyword and location weights. The code is modularized to connect to OpenAI/Gemini APIs in future phases.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Duplicate Warning Card -->
+          <div class="card duplicate-warning-card" id="duplicateWarningCard" hidden>
+            <div class="card-header warning-header">
+              <div class="warning-title-wrap">
+                <span class="warning-icon" aria-hidden="true">⚠️</span>
+                <h3 class="card-title">Potential Duplicate Detected!</h3>
+              </div>
+              <span class="badge badge-warning" id="duplicateSimilarityBadge">0% Match</span>
+            </div>
+            <div class="card-body">
+              <p class="warning-text">
+                A similar complaint was already submitted in this vicinity. Instead of filing a duplicate, you can endorse the existing report to boost its priority score!
+              </p>
+              <div class="duplicate-preview" id="duplicatePreviewBox">
+                <!-- Injected via JS -->
+              </div>
+              <div class="duplicate-actions">
+                <button type="button" class="btn btn-warning btn-sm" id="endorseDuplicateBtn">
+                  👍 Endorse Existing Report (+1 Vote)
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" id="ignoreDuplicateBtn">
+                  Submit Anyway as Distinct Issue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================
+         VIEW 3: ISSUE TRACKER / BROWSE COMPLAINTS
+         ======================================================== -->
+    <section id="tracker-view" class="view-panel" role="tabpanel" aria-labelledby="tab-tracker" hidden>
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">Civic Complaints Tracker</h1>
+          <p class="view-subtitle">Search, filter by urgency, inspect rule priority scores, or update status for triage.</p>
+        </div>
+        <div class="header-action-group">
+          <button type="button" class="btn btn-primary btn-sm" id="newReportFromTrackerBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            + Report New Issue
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls & Filter Toolbar -->
+      <div class="filter-toolbar card">
+        <div class="toolbar-search-row">
+          <!-- Full-Text Search Input -->
+          <div class="search-input-group">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input 
+              type="search" 
+              id="searchComplaintsInput" 
+              class="form-control search-field" 
+              placeholder="Search by keywords, street name, complaint ID (e.g., 'pothole', '4th Ave', '#CF-101')..."
+              aria-label="Search complaints"
+            >
+            <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Clear search" hidden>✕</button>
+          </div>
+
+          <!-- Quick Sort Dropdown -->
+          <div class="sort-select-group">
+            <label for="sortComplaintsSelect" class="sort-label">Sort:</label>
+            <select id="sortComplaintsSelect" class="form-select sort-select">
+              <option value="priority-desc" selected>Highest Priority First</option>
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="votes-desc">Most Endorsed First</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter Selects & Badges Row -->
+        <div class="toolbar-filters-row">
+          <!-- Category Filter -->
+          <div class="filter-group">
+            <label for="categoryFilterSelect" class="filter-label">Category:</label>
+            <select id="categoryFilterSelect" class="form-select filter-select">
+              <option value="ALL">All Categories</option>
+              <option value="Roads & Potholes">Roads & Potholes</option>
+              <option value="Street Lighting">Street Lighting</option>
+              <option value="Waste & Sanitation">Waste & Sanitation</option>
+              <option value="Water & Sewage">Water & Sewage</option>
+              <option value="Public Safety">Public Safety</option>
+              <option value="Parks & Greenery">Parks & Greenery</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="filter-group">
+            <label for="statusFilterSelect" class="filter-label">Status:</label>
+            <select id="statusFilterSelect" class="form-select filter-select">
+              <option value="ALL">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="filter-group">
+            <label for="priorityFilterSelect" class="filter-label">Priority:</label>
+            <select id="priorityFilterSelect" class="form-select filter-select">
+              <option value="ALL">All Priorities</option>
+              <option value="Critical">Critical (75-100)</option>
+              <option value="High">High (50-74)</option>
+              <option value="Medium">Medium (25-49)</option>
+              <option value="Low">Low (0-24)</option>
+            </select>
+          </div>
+
+          <!-- Reset Filter Button -->
+          <button type="button" id="resetFiltersBtn" class="btn btn-ghost btn-sm reset-filter-btn" title="Reset all search filters">
+            Reset Filters
+          </button>
+        </div>
+
+        <!-- Filter Results Summary Banner -->
+        <div class="results-meta-bar">
+          <span class="results-count" id="resultsCountText">Showing 0 complaints</span>
+          <div class="active-chips" id="activeFilterChipsContainer">
+            <!-- Filter tags inserted dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Complaints List Container -->
+      <div id="complaintsListContainer" class="complaints-grid" role="region" aria-live="polite" aria-label="Complaints List">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Empty State Container -->
+      <div id="complaintsEmptyState" class="empty-state-card card" hidden>
+        <div class="empty-state-graphic" aria-hidden="true">📭</div>
+        <h3 class="empty-state-title" id="emptyStateTitle">No complaints found</h3>
+        <p class="empty-state-text" id="emptyStateDesc">
+          There are no complaints matching your active search filters. Try clearing your filters or report a new civic issue.
+        </p>
+        <div class="empty-state-actions">
+          <button type="button" class="btn btn-secondary" id="emptyResetFilterBtn">Clear All Filters</button>
+          <button type="button" class="btn btn-primary" id="emptyCreateReportBtn">+ Submit New Complaint</button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================
+         VIEW 4: TRANSPARENCY & HOW LOCAL RULES WORK
+         ======================================================== -->
+    <section id="transparency-view" class="view-panel" role="tabpanel" aria-labelledby="tab-transparency" hidden>
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">How CivicFix AI Works (System Transparency)</h1>
+          <p class="view-subtitle">A transparent look at our deterministic heuristics, priority scoring formula, duplicate detection, and architecture for real AI integration.</p>
+        </div>
+      </div>
+
+      <div class="transparency-grid">
+        <!-- Architecture Card -->
+        <div class="card transparency-card">
+          <div class="card-header">
+            <h2 class="card-title">1. Local Rules vs. "Black Box" AI</h2>
+            <span class="badge badge-primary">Philosophy</span>
+          </div>
+          <div class="card-body">
+            <p>
+              In civic management, citizens and municipal supervisors need <strong>clarity and auditability</strong>. Instead of hiding prioritization behind an opaque algorithm, CivicFix AI currently runs an explicit, modular rule-based heuristics pipeline.
+            </p>
+            <div class="callout callout-info">
+              <strong>Future AI Readiness:</strong> The codebase is organized with a dedicated <code>CivicRulesEngine</code> class. When ready for production, this engine can securely connect to external Large Language Models (e.g., Google Gemini or OpenAI) via backend webhooks without changing frontend rendering.
+            </div>
+          </div>
+        </div>
+
+        <!-- Priority Scoring Formula Card -->
+        <div class="card transparency-card">
+          <div class="card-header">
+            <h2 class="card-title">2. Priority Scoring Formula (0 to 100)</h2>
+            <span class="badge badge-success">Formula</span>
+          </div>
+          <div class="card-body">
+            <div class="formula-box">
+              <code>Score = UrgencyBase + SafetyKeywords + SensitiveLocation + CommunityEndorsements</code>
+            </div>
+            <table class="transparency-table">
+              <thead>
+                <tr>
+                  <th>Factor</th>
+                  <th>Weight Range</th>
+                  <th>Examples &amp; Local Rules</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Citizen Urgency Base</strong></td>
+                  <td>+10 to +45 pts</td>
+                  <td>Low (+10), Medium (+20), High (+35), Critical (+45)</td>
+                </tr>
+                <tr>
+                  <td><strong>Safety & Hazard Keywords</strong></td>
+                  <td>Up to +30 pts</td>
+                  <td>Keywords: <em>danger, hazard, injury, accident, collapse, spark, sinkhole, burst pipe</em></td>
+                </tr>
+                <tr>
+                  <td><strong>Sensitive Zone Proximity</strong></td>
+                  <td>Up to +20 pts</td>
+                  <td>Locations containing: <em>school, hospital, playground, kindergarten, clinic, highway</em></td>
+                </tr>
+                <tr>
+                  <td><strong>Contextual Vulnerability</strong></td>
+                  <td>Up to +15 pts</td>
+                  <td>Terms: <em>dark, night, unlit, flooding, blocked, sewer</em></td>
+                </tr>
+                <tr>
+                  <td><strong>Community Endorsements</strong></td>
+                  <td>+5 pts each</td>
+                  <td>Each upvote adds +5 pts (capped at +20 pts total) to prioritize widespread issues</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Duplicate Detection Algorithm Card -->
+        <div class="card transparency-card">
+          <div class="card-header">
+            <h2 class="card-title">3. Possible Duplicate Detection Logic</h2>
+            <span class="badge badge-warning">Deduplication</span>
+          </div>
+          <div class="card-body">
+            <p>
+              When a citizen types a complaint, the engine checks existing issues within the local database:
+            </p>
+            <ul class="numbered-steps">
+              <li><strong>Text Tokenization:</strong> Cleans punctuation, removes stop-words (<em>the, at, in, near, on</em>), and tokenizes both title and description.</li>
+              <li><strong>Jaccard Word Overlap:</strong> Computes the intersection over union of keyword tokens.</li>
+              <li><strong>Location Proximity Check:</strong> Checks street names and landmarks for match or substring equality.</li>
+              <li><strong>Composite Similarity Score:</strong> If composite similarity exceeds <strong>45%</strong>, a duplicate warning is rendered with an option to upvote the existing report instead of cluttering city queues.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Category Keyword Classifier Card -->
+        <div class="card transparency-card">
+          <div class="card-header">
+            <h2 class="card-title">4. Category Classifier Keyword Matrix</h2>
+            <span class="badge badge-neutral">Auto-Suggestion</span>
+          </div>
+          <div class="card-body">
+            <p>The system evaluates keyword frequencies to auto-suggest categories:</p>
+            <div class="keywords-cloud">
+              <span class="kw-tag">🛣️ Roads: pothole, asphalt, crater, curb, sidewalk, pavement</span>
+              <span class="kw-tag">💡 Lighting: streetlight, lamp, bulb, blackout, dark, unlit, wiring</span>
+              <span class="kw-tag">🗑️ Waste: trash, garbage, dumpster, litter, debris, odor, rats</span>
+              <span class="kw-tag">🚰 Water: leak, pipe, flood, burst, sewage, drainage, gutter</span>
+              <span class="kw-tag">⚠️ Public Safety: exposed, hazard, fallen tree, fire, collapse, wire</span>
+              <span class="kw-tag">🌳 Parks: playground, bench, swing, overgrown, park lawn</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================
+       MODAL: COMPLAINT DETAILS & TRIAGE DIALOG
+       ======================================================== -->
+  <div id="complaintDetailModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalComplaintTitle" hidden style="display: none;">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="badge" id="modalCategoryBadge">Category</span>
+          <span class="demo-tag" id="modalDemoTag" title="This is realistic sample data for hackathon demonstration">DEMO DATA</span>
+          <h2 class="modal-title" id="modalComplaintTitle">Complaint Details</h2>
+          <span class="modal-id" id="modalComplaintId">#CF-000</span>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeModalBtn" aria-label="Close details dialog">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Status & Priority Banner -->
+        <div class="modal-meta-row">
+          <div class="meta-item">
+            <span class="meta-label">Status:</span>
+            <span class="status-badge" id="modalStatusBadge">Pending</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Priority:</span>
+            <span class="priority-badge" id="modalPriorityBadge">High</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Rule Score:</span>
+            <span class="score-pill" id="modalScorePill">78 / 100</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Citizen Urgency:</span>
+            <span class="urgency-text" id="modalUrgencyText">High</span>
+          </div>
+        </div>
+
+        <!-- Location & Timestamp -->
+        <div class="modal-info-bar">
+          <div class="info-cell">
+            <span class="info-icon" aria-hidden="true">📍</span>
+            <div>
+              <span class="info-title">Reported Location</span>
+              <strong id="modalLocationText">123 Main St</strong>
+            </div>
+          </div>
+          <div class="info-cell">
+            <span class="info-icon" aria-hidden="true">🕒</span>
+            <div>
+              <span class="info-title">Date Submitted</span>
+              <strong id="modalDateText">Oct 23, 2026</strong>
+            </div>
+          </div>
+          <div class="info-cell">
+            <span class="info-icon" aria-hidden="true">👥</span>
+            <div>
+              <span class="info-title">Citizen Endorsements</span>
+              <strong id="modalEndorseCount">1 upvote</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="modal-section">
+          <h3 class="section-title">Problem Description</h3>
+          <p class="modal-description-text" id="modalDescriptionText">Full problem description...</p>
+        </div>
+
+        <!-- Photo Attachment If Any -->
+        <div class="modal-section" id="modalPhotoSection" hidden>
+          <h3 class="section-title">Attached Photo</h3>
+          <div class="modal-photo-wrap">
+            <img id="modalPhotoImage" alt="Attached evidence of the civic problem" class="modal-photo-img">
+          </div>
+        </div>
+
+        <!-- Rule Engine Explanation Breakdown -->
+        <div class="modal-section">
+          <h3 class="section-title">Local Rules Engine Priority Assessment</h3>
+          <div class="rule-calculation-card">
+            <div class="rule-score-header">
+              <span>Deterministically Calculated Score: <strong id="modalRuleScoreVal">0</strong>/100</span>
+              <span class="text-muted-xs">Rule Engine v1.0</span>
+            </div>
+            <ul class="rule-factors-list" id="modalRuleFactorsList">
+              <!-- Rendered via JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Status Triage Action (Admin / Citizen Simulator) -->
+        <div class="modal-section triage-section">
+          <h3 class="section-title">Triage Status Simulator</h3>
+          <p class="triage-desc">Simulate municipal authority response by advancing the workflow state:</p>
+          <div class="status-action-buttons">
+            <button type="button" class="btn btn-outline btn-status-change" data-new-status="Pending">Mark Pending</button>
+            <button type="button" class="btn btn-warning-outline btn-status-change" data-new-status="In Progress">Mark In Progress</button>
+            <button type="button" class="btn btn-success-outline btn-status-change" data-new-status="Resolved">Mark Resolved</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <div class="footer-left">
+          <button type="button" class="btn btn-outline" id="modalEndorseBtn">
+            👍 Endorse This Issue (<span id="modalEndorseBtnCount">0</span>)
+          </button>
+        </div>
+        <div class="footer-right">
+          <button type="button" class="btn btn-danger-ghost btn-sm" id="modalDeleteBtn">Delete Issue</button>
+          <button type="button" class="btn btn-secondary" id="modalDoneBtn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div id="toastContainer" class="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-brand-col">
+        <div class="footer-brand">
+          <span class="brand-title">CivicFix <span class="brand-accent">AI</span></span>
+          <span class="footer-tagline">Prompt War Hackathon Prototype</span>
+        </div>
+        <p class="footer-copy">
+          Designed to empower communities through transparent, rule-assisted civic problem triage. Built using vanilla HTML5, CSS3, and JavaScript with 0 external dependencies.
+        </p>
+      </div>
+
+      <div class="footer-meta-col">
+        <div class="data-management-box">
+          <span class="data-title">Local Browser Storage</span>
+          <div class="data-buttons">
+            <button type="button" class="btn btn-ghost btn-xs" id="exportDataBtn" title="Export current complaints to JSON">📥 Export JSON</button>
+            <button type="button" class="btn btn-ghost btn-xs" id="footerResetBtn" title="Reload demo dataset">🔄 Reset Demo Data</button>
+            <button type="button" class="btn btn-ghost-danger btn-xs" id="clearAllStorageBtn" title="Remove all stored complaints">🗑️ Clear All</button>
+          </div>
+        </div>
+        <p class="footer-disclaimer">
+          ⚠️ <strong>Disclaimer:</strong> Not connected to actual municipal dispatch or emergency services (911).
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script Execution -->
+  <script src="script.js"></script>
+</body>
+</html>
